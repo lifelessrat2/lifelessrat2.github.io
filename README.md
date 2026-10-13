@@ -1,2 +1,2 @@
-# Weihe Zhang's homepage
-lifelessrat2.github.io
+# Weihe Zhang and Reimu Hakurei's homepage
+https://lifelessrat2.github.io/
