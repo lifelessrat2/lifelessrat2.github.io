@@ -69,6 +69,14 @@
       display: flex;
       gap: 18px;
       flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 让胶囊按钮与左侧纯文字链接在竖直方向严格居中对齐 */
+    .nav-links > a {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.5;
     }
 
     .nav-links a {
@@ -79,6 +87,26 @@
 
     .nav-links a:hover {
       color: var(--link);
+    }
+
+    .enter-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 999px;
+      color: #b6293f !important;
+      background: linear-gradient(180deg, #fff5f6, #ffe9ec);
+      border: 1px solid #f3c9d1;
+      font-weight: 620;
+      transition: all 0.16s ease;
+    }
+
+    .enter-link:hover {
+      text-decoration: none !important;
+      color: #fff !important;
+      background: linear-gradient(180deg, #e2465f, #c0203a);
+      border-color: #c0203a;
+      transform: translateY(-1px);
     }
 
     .card {
@@ -592,6 +620,35 @@
       .timeline-item > div {
         min-width: 0;
       }
+
+      /* 窄屏：播放器占满一行，标题可再放宽 */
+      .nav-links {
+        width: 100%;
+        gap: 12px;
+      }
+
+      .audio-player {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+
+      .ap-body {
+        flex: 1 1 auto;
+      }
+
+      .ap-meta {
+        flex: 1 1 auto;
+      }
+
+      .ap-title {
+        max-width: none;
+      }
+
+      .ap-seek {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 90px;
+      }
     }
 
     @media (max-width: 560px) {
@@ -625,7 +682,6 @@
 </head>
 
 <body>
-  <audio id="myAudio" src="A Dream More Scarlet than Red.mp3"></audio>
   <main class="container">
     <nav class="top-nav">
       <div class="nav-name">Weihe Zhang</div>
@@ -634,7 +690,7 @@
         <a href="#projects">Projects</a>
         <a href="#experience">Education & Experiences</a>
         <a href="#notes">Posts & Notes</a>
-        <button id="playButton">Play <i>A Dream More Scarlet than Red</i></button>
+        <a class="enter-link" href="reimu.html">Click to enter Gensoukyou &#8594;</a>
       </div>
     </nav>
 
@@ -653,7 +709,7 @@
         </p>
 
         <div class="links">
-          <a class="pill-link" href="#" target="_blank">Workplace: </a>
+          <a class="pill-link" href="https://map.ustc.edu.cn/" target="_blank">Workplace: C1406, Material Science Teaching and Research Building C (物质科学教研C楼), USTC</a>
           <a class="pill-link" href="mailto:zhangweihe@mail.ustc.edu.cn" target="_blank">Institutional Email: zhangweihe@mail.ustc.edu.cn</a>
           <a class="pill-link" href="mailto:2741556868@qq.com" target="_blank">Tencent QQ Mail: 2741556868@qq.com</a>
           <a class="pill-link" href="https://github.com/lifelessrat2" target="_blank">GitHub: lifelessrat2</a>
@@ -873,6 +929,7 @@
         <div class="info-panel">
           <h3>Selected Awards</h3>
           <div class="award-list">
+            <span class="award-chip">2026.10--Bambu Lab Scholarship (Top 30%, Application in Progress)</span>
             <span class="award-chip">2026.6--Outstanding Student Club Leader of USTC Tactical Regiment (2025–2026 Academic Year)</span>
             <span class="award-chip">2026.5--Outstanding Communist Youth League Member, USTC (2025–2026 Academic Year)</span>
             <a class="pill-link" href="https://young.ustc.edu.cn/2026/0401/c15063a725056/page.psp" target="_blank">2026.3--Outstanding Team & Individual, Winter "Return to Hometown" Social Practice Program (USTC Login Required)</a>
@@ -889,8 +946,17 @@
               <a class="pill-link" href="http://jlwlxh.com.cn/news_view.aspx?id=156" target="_blank">2022.10--First Prize & Selected for the Provincial Team (12/296), Jilin Provincial Division of 39th Chinese Physics Olympiad (CPhO)</a>
               <span class="award-chip">2021--National Gold (Division 1), 35th Annual AAPT PhysicsBowl Contest</span>
             </div>
-          </details>
+          </details>  
         </div>
+
+        <div class="info-panel">
+          <h3>Experiences</h3>
+            <div class="award-list">
+              <span class="award-chip">2026.3-2026.7--Teaching Assistant for Electromagnetism A</span>
+            </div>
+          <div class="award-list">
+
+          </div>
       </div>
     </section>
 
@@ -972,22 +1038,6 @@
   <footer class="footer">
     © 2026 Weihe Zhang. Built with GitHub Pages.
   </footer>
-  <script>
-    // 获取音频和按钮
-    const audio = document.getElementById('myAudio');
-    const btn = document.getElementById('playButton');
-
-    // 点击按钮事件
-    btn.addEventListener('click', function() {
-  if (audio.paused) {
-    audio.play();
-    btn.innerHTML = "Pause <em>A Dream More Scarlet than Red</em>";
-  } else {
-    audio.pause();
-    btn.innerHTML = "Play <em>A Dream More Scarlet than Red</em>";
-  }
-})
-
-  </script>
+  
 </body>
 </html>

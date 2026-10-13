@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A minimal, dependency-free academic homepage template.">
+  <meta name="robots" content="index,follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Reimu Hakurei | Homepage">
+  <meta property="og:description" content="Research, publications, projects, and academic experience.">
+  <title>Reimu Hakurei | Homepage</title>
+  <style>
+    :root {
+      --bg: #fff7f8;
+      --card: rgba(255, 255, 255, 0.94);
+      --text: #1d1d1f;
+      --subtle: #3f4247;
+      --muted: #6b7078;
+      --line: #e5e5ea;
+      --link: #0066cc;
+      --chip: #fdf1f3;
+      --chip-text: #a8263c;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.06);
+      --soft-shadow: 0 8px 26px rgba(0, 0, 0, 0.045);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text);
+      /* 红白渐变：左上纯白 → 右下沉入博丽红 */
+      background:
+        radial-gradient(1100px 620px at 8% -8%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0) 62%),
+        radial-gradient(900px 560px at 100% 0%, rgba(255, 226, 231, 0.85), rgba(255, 226, 231, 0) 60%),
+        linear-gradient(158deg, #ffffff 0%, #fff6f7 32%, #ffe8ec 62%, #ffd7dd 100%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 34px 20px 42px;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav-name {
+      font-weight: 650;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 让胶囊按钮与左侧纯文字链接在竖直方向严格居中对齐 */
+    .nav-links > a {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.5;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.12s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--link);
+    }
+
+    .enter-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 999px;
+      color: #b6293f !important;
+      background: linear-gradient(180deg, #fff5f6, #ffe9ec);
+      border: 1px solid #f3c9d1;
+      font-weight: 620;
+      transition: all 0.16s ease;
+    }
+
+    .enter-link:hover {
+      text-decoration: none !important;
+      color: #fff !important;
+      background: linear-gradient(180deg, #e2465f, #c0203a);
+      border-color: #c0203a;
+      transform: translateY(-1px);
+    }
+
+
+    /* ===== 阴阳玉弹幕图层（点击屏幕辐射射击） =====
+       关键结构：外层 .orb 只负责“平移”（由 JS 每帧写 transform），
+       内层 .orb-img 只负责“自转”（由 CSS 动画写 transform）。
+       两者分属不同元素，绝不共用同一条 transform 链，
+       因此不会出现“旋转把平移带偏成弧线”的问题。 */
+    .orb-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .orb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: var(--orb-size, 54px);
+      height: var(--orb-size, 54px);
+      will-change: transform, opacity;
+      pointer-events: none;
+      user-select: none;
+      /* 注意：这里绝对不写 transform / rotate / animation */
+    }
+
+    .orb-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      transform-origin: 50% 50%;
+      animation: orb-spin var(--orb-spin, 6s) linear infinite;
+      filter: drop-shadow(0 2px 6px rgba(192, 32, 58, 0.35));
+    }
+
+    @keyframes orb-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orb-img { animation: none; }
+    }
+
+    /* 让正文内容浮在阴阳玉之上 */
+    main.container {
+      position: relative;
+      z-index: 1;
+    }
+
+
+    /* ===== 音乐播放器 ===== */
+    .audio-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 4px 4px 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #f0d3d8;
+      box-shadow: 0 6px 18px rgba(192, 32, 58, 0.07);
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .audio-player:hover {
+      border-color: #e9b8c1;
+      box-shadow: 0 8px 22px rgba(192, 32, 58, 0.13);
+    }
+
+    .ap-toggle {
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(180deg, #e2465f, #c0203a);
+      box-shadow: 0 3px 9px rgba(192, 32, 58, 0.34), inset 0 0 0 2px rgba(255, 255, 255, 0.9);
+      transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+    }
+
+    .ap-toggle:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 13px rgba(192, 32, 58, 0.42), inset 0 0 0 2px rgba(255, 255, 255, 0.95);
+    }
+
+    .ap-toggle:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(192, 32, 58, 0.32), inset 0 0 0 2px rgba(255, 255, 255, 0.9);
+    }
+
+    .ap-toggle:focus-visible {
+      outline: 2px solid #c0203a;
+      outline-offset: 2px;
+    }
+
+    .ap-toggle svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .ap-body {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .ap-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .ap-title {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 620;
+      letter-spacing: -0.005em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 320px;
+    }
+
+    .ap-time {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
+    }
+
+    .ap-seek {
+      --progress: 0%;
+      position: relative;
+      flex: 0 0 auto;
+      width: 130px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .ap-seek:focus-visible {
+      outline: 2px solid #c0203a;
+      outline-offset: 3px;
+      border-radius: 999px;
+    }
+
+    .ap-seek-track {
+      position: relative;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: #f3dfe2;
+      overflow: hidden;
+      transition: height 0.14s ease;
+    }
+
+    .ap-seek:hover .ap-seek-track,
+    .ap-seek.is-dragging .ap-seek-track {
+      height: 6px;
+    }
+
+    .ap-seek-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--progress);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ef6b80, #c0203a);
+    }
+
+    .ap-seek-knob {
+      position: absolute;
+      top: 50%;
+      left: var(--progress);
+      width: 10px;
+      height: 10px;
+      margin: -5px 0 0 -5px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #c0203a;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+      opacity: 0;
+      transform: scale(0.7);
+      transition: opacity 0.14s ease, transform 0.14s ease;
+      pointer-events: none;
+    }
+
+    .ap-seek:hover .ap-seek-knob,
+    .ap-seek:focus-visible .ap-seek-knob,
+    .ap-seek.is-dragging .ap-seek-knob {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .ap-seek.is-dragging .ap-seek-knob {
+      transform: scale(1.15);
+    }
+
+    .audio-player.is-playing .ap-seek-fill {
+      background: linear-gradient(90deg, #ef6b80, #c0203a, #ef6b80);
+      background-size: 200% 100%;
+      animation: ap-shimmer 2.6s linear infinite;
+    }
+
+    @keyframes ap-shimmer {
+      from { background-position: 0% 0; }
+      to   { background-position: -200% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .audio-player.is-playing .ap-seek-fill { animation: none; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      border-radius: var(--radius);
+      padding: 34px 36px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 42px;
+      align-items: center;
+    }
+
+    .profile-photo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      justify-self: end;
+      width: fit-content;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+    }
+
+    .profile-photo {
+      height: 180px;
+      width: auto;
+      display: block;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 42px;
+      line-height: 1.12;
+      letter-spacing: -0.045em;
+      font-weight: 760;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 25px;
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+      font-weight: 720;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      line-height: 1.35;
+      letter-spacing: -0.015em;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 6px 0;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .identity {
+      font-size: 17px;
+      color: var(--subtle);
+      margin-bottom: 10px;
+    }
+
+    .about-line {
+      max-width: 760px;
+      margin-top: 12px;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.62;
+    }
+
+    .links {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill-link,
+    .mini-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .pill-link {
+      padding: 5px 13px;
+      border: 1px solid #d7e6fb;
+      background: rgba(247, 250, 255, 0.9);
+      color: var(--link);
+      font-size: 14.5px;
+      line-height: 1.5;
+    }
+
+    .pill-link:hover,
+    .mini-link:hover {
+      text-decoration: none;
+      background: #edf5ff;
+      border-color: #bfd8f7;
+      transform: translateY(-1px);
+    }
+
+    .mini-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 7px;
+    }
+
+    .mini-link {
+      padding: 4px 10px;
+      border: 1px solid #e1e7f0;
+      background: #fbfcff;
+      color: var(--link);
+      font-size: 13.5px;
+      line-height: 1.45;
+    }
+
+    .item-title {
+      font-weight: 680;
+      font-size: 17px;
+      line-height: 1.42;
+      letter-spacing: -0.01em;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.48;
+    }
+
+    .authors {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.45;
+    }
+
+    .me {
+      color: var(--text);
+      font-weight: 720;
+    }
+
+    .highlight {
+      margin: 6px 0 5px;
+      color: #343840;
+      font-size: 14.8px;
+      line-height: 1.5;
+    }
+
+    .highlight-label {
+      color: var(--text);
+      font-weight: 680;
+    }
+
+    .tag {
+      display: inline-block;
+      margin: 7px 7px 0 0;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--chip-text);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .publication-card {
+      display: grid;
+      /*grid-template-columns: 250px 1fr;*/
+      grid-template-columns: 1fr;
+      gap: 22px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f2;
+    }
+
+    .publication-card:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .publication-cover-wrap {
+      width: 250px;
+      height: 150px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid #e6e8ec;
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+    }
+
+    .publication-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .project-grid {
+      display: grid;
+      /*grid-template-columns: repeat(3, 1fr);*/
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .project-card,
+    .note-card,
+    .info-panel {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid #eceef2;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.032);
+    }
+
+    .project-card {
+      min-height: 178px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .project-title {
+      font-size: 17px;
+      font-weight: 720;
+      letter-spacing: -0.012em;
+      margin-bottom: 6px;
+    }
+
+    .project-desc {
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.55;
+    }
+
+    .more-block {
+      margin-top: 14px;
+    }
+
+    details {
+      margin-top: 8px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14.5px;
+      user-select: none;
+      transition: color 0.12s ease;
+    }
+
+    summary:hover {
+      color: var(--link);
+    }
+
+    details[open] summary {
+      margin-bottom: 10px;
+      color: var(--link);
+    }
+
+    .more-project-grid {
+      display: grid;
+      /*grid-template-columns: repeat(3, 1fr);*/
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .experience-awards-grid {
+      display: grid;
+      /*grid-template-columns: 1.35fr 1fr;*/
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .timeline-item {
+      display: grid;
+      /*grid-template-columns: 38px 1fr;*/
+      grid-template-columns: 1fr;
+      gap: 6px;
+      align-items: start;
+    }
+
+    .school-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 1px;
+      display: block;
+    }
+
+    .timeline-time {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      margin-bottom: 2px;
+    }
+
+    .timeline-title {
+      font-size: 15.5px;
+      line-height: 1.5;
+      color: var(--text);
+      font-weight: 620;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .award-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .award-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: #f7f7f9;
+      border: 1px solid #eceef2;
+      color: #343840;
+      font-size: 14px;
+      line-height: 1.45;
+      /* 防御性修复 */
+      max-width: 100%;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .note-card {
+      min-height: 250px;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 14.5px;
+      margin: 0 0 9px;
+    }
+
+    .post-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .post-list li {
+      position: relative;
+      margin-bottom: 7px;
+      padding-left: 15px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .post-list li::before {
+      content: "";
+      position: absolute;
+      left: 1px;
+      top: 0.72em;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #aeb4bd;
+    }
+
+    .post-list a {
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.12s ease;
+    }
+
+    .post-list a:hover {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .footer {
+      text-align: center;
+      color: #8a8f98;
+      font-size: 13.5px;
+      padding: 8px 0 24px;
+    }
+
+    @media (max-width: 900px) {
+      .project-grid,
+      .more-project-grid,
+      .note-grid,
+      .experience-awards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .note-card,
+      .project-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .container {
+        padding: 24px 14px 36px;
+      }
+
+      .top-nav {
+        display: none;
+      }
+
+      .card {
+        padding: 26px 24px;
+        border-radius: 20px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .profile-photo-wrap {
+        justify-self: center;
+        width: fit-content;
+      }
+
+      .profile-photo {
+        height: 155px;
+      }
+
+      .publication-card {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .publication-cover-wrap {
+        width: 100%;
+        height: 210px;
+      }
+
+      /* 窄屏修复：让长文本胶囊/链接换行、长 URL 可断行，防止向右溢出 */
+      .pill-link,
+      .mini-link {
+        white-space: normal;
+        text-align: center;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .award-chip {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .award-list > *,
+      .links > *,
+      .mini-links > * {
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .info-panel {
+        min-width: 0;
+      }
+
+      .timeline-item > div {
+        min-width: 0;
+      }
+
+      /* 窄屏：播放器占满一行，标题可再放宽 */
+      .nav-links {
+        width: 100%;
+        gap: 12px;
+      }
+
+      .audio-player {
+        flex: 1 1 100%;
+        max-width: 100%;
+      }
+
+      .ap-body {
+        flex: 1 1 auto;
+      }
+
+      .ap-meta {
+        flex: 1 1 auto;
+      }
+
+      .ap-title {
+        max-width: none;
+      }
+
+      .ap-seek {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 90px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      h1 {
+        font-size: 34px;
+      }
+
+      h2 {
+        font-size: 23px;
+      }
+
+      .identity,
+      .about-line {
+        font-size: 15.5px;
+      }
+
+      .links {
+        gap: 8px;
+      }
+
+      .pill-link {
+        font-size: 14px;
+        padding: 5px 11px;
+      }
+
+      .publication-cover-wrap {
+        height: 190px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 阴阳玉乱滚图层：5 个灵梦的阴阳玉在页面留白里自由滚动 -->
+  <div class="orb-layer" id="orbLayer" aria-hidden="true"></div>
+  <audio id="myAudio" src="assets/A Dream More Scarlet than Red.mp3"></audio>
+  <main class="container">
+    <nav class="top-nav">
+      <div class="nav-name">Reimu Hakurei</div>
+      <div class="nav-links">
+        <a href="#publications">Selected Publications</a>
+        <a href="#projects">Projects</a>
+        <a href="#experience">Education & Experiences</a>
+        <a href="#notes">Posts & Notes</a>
+          <a class="enter-link" href="index.html">&#8592; Leave Gensoukyou</a>
+        <div class="audio-player" id="audioPlayer">
+          <button class="ap-toggle" id="playButton" type="button" aria-label="Play" title="Play / Pause">
+            <svg class="ap-icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.2v11.6c0 .5.55.8.97.53l9.2-5.8a.63.63 0 0 0 0-1.06l-9.2-5.8A.63.63 0 0 0 4 2.2Z"/></svg>
+            <svg class="ap-icon-pause" viewBox="0 0 16 16" aria-hidden="true" hidden><path d="M4.4 2.3h2.5c.35 0 .6.25.6.6v10.2c0 .35-.25.6-.6.6H4.4a.6.6 0 0 1-.6-.6V2.9c0-.35.25-.6.6-.6Zm4.7 0h2.5c.35 0 .6.25.6.6v10.2c0 .35-.25.6-.6.6h-2.5a.6.6 0 0 1-.6-.6V2.9c0-.35.25-.6.6-.6Z"/></svg>
+          </button>
+
+          <div class="ap-body">
+            <div class="ap-meta">
+              <span class="ap-title" title="A Dream More Scarlet than Red">A Dream More Scarlet than Red</span>
+              <span class="ap-time"><span id="apCurrent">0:00</span> / <span id="apDuration">0:00</span></span>
+            </div>
+
+            <div class="ap-seek" id="apSeek" role="slider" tabindex="0"
+                 aria-label="Seek" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00">
+              <div class="ap-seek-track"><div class="ap-seek-fill"></div></div>
+              <div class="ap-seek-knob"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===================================================================
+         内容占位区：把下面每个占位符替换成你的真实内容即可。
+         保留了原有 class，直接改文字/链接，样式不会跑掉。
+         =================================================================== -->
+
+    <!-- ---------------- Hero / 个人简介 ---------------- -->
+    <section class="card hero">
+      <div>
+        <h1>Reimu Hakurei(霊夢 博麗])</h1>
+
+        <p class="identity">
+          [YOUR TITLE / PROGRAM, e.g. Undergraduate Student, Major]<br>
+          [YOUR LAB / DEPARTMENT / UNIVERSITY]<br>
+          [OPTIONAL THIRD LINE]
+        </p>
+
+        <p class="about-line">
+          [SHORT BIO: introduce yourself in 2-3 sentences. What you study, what you are
+          interested in, and what you are currently working on. You may include an
+          <a href="[LINK TO ADVISOR OR RELATED PAGE]" target="_blank" rel="noopener noreferrer">[LINKED NAME]</a>
+          inline like this.]
+        </p>
+
+        <div class="links">
+          <a class="pill-link" href="[MAP OR LOCATION URL]">[Workplace: BUILDING, ROOM, UNIVERSITY]</a>
+          <a class="pill-link" href="mailto:[INSTITUTIONAL EMAIL]">[Institutional Email: your@email.edu]</a>
+          <a class="pill-link" href="mailto:[SECONDARY EMAIL]">[Secondary Email: you@example.com]</a>
+          <a class="pill-link" href="[GITHUB URL]">[GitHub: username]</a>
+          <!-- 需要的话继续加：Scholar / ORCID / ResearchGate 等 -->
+        </div>
+      </div>
+
+      <div class="profile-photo-wrap">
+        <img src="assets/fumo-reimu.jpg" alt="[PORTRAIT ALT TEXT]" class="profile-photo" width="360" height="420">
+      </div>
+    </section>
+
+    <!-- ---------------- Selected Publications ---------------- -->
+    <section class="card" id="publications">
+      <h2>Selected Publications</h2>
+
+      <!-- 复制下面这一整块 <div class="publication-card"> 来添加更多论文 -->
+      <div class="publication-card">
+        <div class="publication-cover-wrap">
+          <img src="assets/publication-placeholder.svg" alt="[PUBLICATION COVER ALT]" class="publication-cover" width="480" height="300">
+        </div>
+        <div>
+          <div class="item-title">
+            [PAPER TITLE]: [SUBTITLE OR ADDITIONAL DESCRIPTION]
+          </div>
+          <div class="authors"><span class="me">[YOUR NAME]</span>, [COAUTHOR A], [COAUTHOR B]</div>
+          <div class="highlight">
+            <span class="highlight-label">Highlight:</span>
+            [ONE SENTENCE DESCRIBING THE MAIN CONTRIBUTION.]
+          </div>
+          <div class="muted">[JOURNAL NAME] [VOLUME], [PAGES] ([YEAR])</div>
+          <div class="muted">DOI: [DOI]</div>
+          <div class="mini-links">
+            <a class="mini-link" href="[JOURNAL URL]">Journal</a>
+            <a class="mini-link" href="[BLOG URL]">Blog Article</a>
+          </div>
+          <span class="tag">[KEYWORD 1]</span>
+          <span class="tag">[KEYWORD 2]</span>
+          <span class="tag">[KEYWORD 3]</span>
+        </div>
+      </div>
+      <!-- /publication-card -->
+
+      <div class="publication-card">
+        <div class="publication-cover-wrap">
+          <img src="assets/publication-placeholder.svg" alt="[PUBLICATION COVER ALT]" class="publication-cover" width="480" height="300">
+        </div>
+        <div>
+          <div class="item-title">
+            [PAPER TITLE]
+          </div>
+          <div class="authors"><span class="me">[YOUR NAME]</span>, [COAUTHOR A]</div>
+          <div class="highlight">
+            <span class="highlight-label">Highlight:</span>
+            [ONE SENTENCE DESCRIBING THE MAIN CONTRIBUTION.]
+          </div>
+          <div class="muted">[JOURNAL NAME] [VOLUME], [PAGES] ([YEAR])</div>
+          <div class="muted">DOI: [DOI]</div>
+          <div class="mini-links">
+            <a class="mini-link" href="[JOURNAL URL]">Journal</a>
+          </div>
+          <span class="tag">[KEYWORD 1]</span>
+          <span class="tag">[KEYWORD 2]</span>
+        </div>
+      </div>
+      <!-- /publication-card -->
+    </section>
+
+    <!-- ---------------- Projects ---------------- -->
+    <section class="card" id="projects">
+      <h2>Projects</h2>
+
+      <div class="project-grid">
+        <!-- 复制下面这一整块 <div class="project-card"> 来添加更多项目 -->
+        <div class="project-card">
+          <div>
+            <div class="project-title">[PROJECT TITLE]<br>[项目中文名或副标题]</div>
+            <div class="project-desc">
+              [PROJECT TYPE / FUNDING / AWARD]<br>[STATUS: In progress / Completed / Year]
+            </div>
+          </div>
+          <div class="mini-links">
+            <a class="mini-link" href="[PROJECT DETAIL URL]">[See Project Details]</a>
+          </div>
+        </div>
+        <!-- /project-card -->
+
+        <div class="project-card">
+          <div>
+            <div class="project-title">[PROJECT TITLE]<br>[项目中文名或副标题]</div>
+            <div class="project-desc">
+              [PROJECT TYPE / FUNDING / AWARD]<br>[STATUS: In progress / Completed / Year]
+            </div>
+          </div>
+          <div class="mini-links">
+            <a class="mini-link" href="[PROJECT DETAIL URL]">[See Project Details]</a>
+          </div>
+        </div>
+        <!-- /project-card -->
+
+        <div class="project-card">
+          <div>
+            <div class="project-title">[PROJECT TITLE]<br>[项目中文名或副标题]</div>
+            <div class="project-desc">
+              [PROJECT TYPE / FUNDING / AWARD]<br>[STATUS: In progress / Completed / Year]
+            </div>
+          </div>
+          <div class="mini-links">
+            <a class="mini-link" href="[PROJECT DETAIL URL]">[See Project Details]</a>
+          </div>
+        </div>
+        <!-- /project-card -->
+      </div>
+    </section>
+
+    <!-- ---------------- Education & Experiences ---------------- -->
+    <section class="card" id="experience">
+      <h2>Education &amp; Experiences</h2>
+
+      <div class="experience-awards-grid">
+        <!-- 教育经历 -->
+        <div class="info-panel">
+          <h3>Education</h3>
+          <div class="timeline">
+            <!-- 复制下面这一整块 <div class="timeline-item"> 来添加更多学历 -->
+            <div class="timeline-item">
+              <img class="school-logo" src="assets/institution-placeholder-ustc.png" alt="[INSTITUTION LOGO ALT]" width="128" height="128">
+              <div>
+                <div class="timeline-time">[START]–[END]</div>
+                <div class="timeline-title">[INSTITUTION NAME], <br>[DEGREE / PROGRAM]</div>
+              </div>
+            </div>
+            <!-- /timeline-item -->
+
+            <div class="timeline-item">
+              <img class="school-logo" src="assets/institution-placeholder-hsannu.png" alt="[INSTITUTION LOGO ALT]" width="128" height="128">
+              <div>
+                <div class="timeline-time">[START]–[END]</div>
+                <div class="timeline-title">[INSTITUTION NAME], <br>[DEGREE / PROGRAM]</div>
+              </div>
+            </div>
+            <!-- /timeline-item -->
+          </div>
+        </div>
+
+        <!-- 获奖 -->
+        <div class="info-panel">
+          <h3>Selected Awards</h3>
+          <div class="award-list">
+            <span class="award-chip">[YEAR.MONTH]--[AWARD NAME (DETAIL)]</span>
+            <span class="award-chip">[YEAR.MONTH]--[AWARD NAME (DETAIL)]</span>
+            <span class="award-chip">[YEAR.MONTH]--[AWARD NAME (DETAIL)]</span>
+            <a class="pill-link" href="[AWARD ANNOUNCEMENT URL]">[YEAR.MONTH]--[AWARD NAME (LINKED ANNOUNCEMENT)]</a>
+            <span class="award-chip">[YEAR.MONTH]--[AWARD NAME (DETAIL)]</span>
+          </div>
+
+          <details>
+            <summary>See more awards
+            </summary>
+            <div class="award-list">
+              <span class="award-chip">[YEAR.MONTH]--[EARLIER AWARD NAME (DETAIL)]</span>
+              <a class="pill-link" href="[AWARD ANNOUNCEMENT URL]">[YEAR.MONTH]--[EARLIER AWARD NAME (LINKED ANNOUNCEMENT)]</a>
+              <span class="award-chip">[YEAR]--[EARLIER AWARD NAME (DETAIL)]</span>
+            </div>
+          </details>
+        </div>
+
+        <!-- 经历 -->
+        <div class="info-panel">
+          <h3>Experiences</h3>
+          <div class="award-list">
+            <span class="award-chip">[START]-[END]--[ROLE, e.g. Teaching Assistant for COURSE]</span>
+            <span class="award-chip">[START]-[END]--[ROLE / INTERNSHIP / POSITION]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------- Posts & Notes ---------------- -->
+    <section class="card" id="notes">
+      <h2>Posts &amp; Notes</h2>
+
+      <div class="note-grid">
+        <!-- 复制下面这一整块 <div class="note-card"> 来添加更多分类 -->
+        <div class="note-card">
+          <h3>[NOTE CATEGORY TITLE]</h3>
+          <p class="section-note">[ONE LINE DESCRIBING THIS CATEGORY.]</p>
+          <ul class="post-list">
+            <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+            <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+            <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+          </ul>
+          <details>
+            <summary>See more [CATEGORY] notes</summary>
+            <ul class="post-list">
+              <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+              <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+            </ul>
+          </details>
+        </div>
+        <!-- /note-card -->
+
+        <div class="note-card">
+          <h3>[NOTE CATEGORY TITLE]</h3>
+          <p class="section-note">[ONE LINE DESCRIBING THIS CATEGORY.]</p>
+          <ul class="post-list">
+            <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+            <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+          </ul>
+          <details>
+            <summary>See more [CATEGORY] notes</summary>
+            <ul class="post-list">
+              <li><a href="[NOTE URL]">[NOTE TITLE]</a></li>
+            </ul>
+          </details>
+        </div>
+        <!-- /note-card -->
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    © 2026 Reimu Hakurei. Built with GitHub Pages.
+  </footer>
+  <script>
+    (function () {
+      const audio = document.getElementById('myAudio');
+      const player = document.getElementById('audioPlayer');
+      const btn = document.getElementById('playButton');
+      const iconPlay = btn.querySelector('.ap-icon-play');
+      const iconPause = btn.querySelector('.ap-icon-pause');
+      const seek = document.getElementById('apSeek');
+      const currentEl = document.getElementById('apCurrent');
+      const durationEl = document.getElementById('apDuration');
+
+      const TITLE = 'A Dream More Scarlet than Red';
+
+      function fmt(sec) {
+        if (!isFinite(sec) || sec < 0) sec = 0;
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return m + ':' + String(s).padStart(2, '0');
+      }
+
+      let duration = 0;
+      let dragging = false;
+
+      // ---- 渲染 ----
+      function renderProgress() {
+        if (dragging) return;
+        const d = duration || audio.duration || 0;
+        const ratio = d > 0 ? Math.min(1, Math.max(0, audio.currentTime / d)) : 0;
+        const pct = (ratio * 100).toFixed(3) + '%';
+        seek.style.setProperty('--progress', pct);
+        currentEl.textContent = fmt(audio.currentTime);
+        seek.setAttribute('aria-valuenow', String(Math.round(audio.currentTime)));
+        seek.setAttribute('aria-valuetext', fmt(audio.currentTime) + ' / ' + fmt(d));
+      }
+
+      function renderDuration() {
+        duration = isFinite(audio.duration) ? audio.duration : 0;
+        durationEl.textContent = fmt(duration);
+        seek.setAttribute('aria-valuemax', String(Math.round(duration)));
+        renderProgress();
+      }
+
+      function renderIcon() {
+        const playing = !audio.paused && !audio.ended;
+        iconPlay.hidden = playing;
+        iconPause.hidden = !playing;
+        player.classList.toggle('is-playing', playing);
+        btn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+        btn.title = (playing ? 'Pause' : 'Play') + ' — ' + TITLE;
+      }
+
+      // ---- 播放控制 ----
+      function toggle() {
+        if (audio.paused || audio.ended) {
+          // 播放结束后再次点击：从头开始
+          if (audio.ended) audio.currentTime = 0;
+          const p = audio.play();
+          if (p && typeof p.catch === 'function') p.catch(function () {});
+        } else {
+          audio.pause();
+        }
+      }
+
+      btn.addEventListener('click', toggle);
+
+      // ---- 拖动进度条 ----
+      function seekRatioFromEvent(e) {
+        const r = seek.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        return r.width > 0 ? Math.min(1, Math.max(0, x / r.width)) : 0;
+      }
+
+      function previewAt(ratio) {
+        const d = duration || audio.duration || 0;
+        seek.style.setProperty('--progress', (ratio * 100).toFixed(3) + '%');
+        currentEl.textContent = fmt(ratio * d);
+      }
+
+      function startDrag(e) {
+        if (!(duration || audio.duration)) return;
+        dragging = true;
+        seek.classList.add('is-dragging');
+        seek.setPointerCapture && e.pointerId !== undefined && seek.setPointerCapture(e.pointerId);
+        previewAt(seekRatioFromEvent(e));
+      }
+
+      function moveDrag(e) {
+        if (!dragging) return;
+        previewAt(seekRatioFromEvent(e));
+      }
+
+      function endDrag(e) {
+        if (!dragging) return;
+        const ratio = seekRatioFromEvent(e);
+        dragging = false;
+        seek.classList.remove('is-dragging');
+        const d = duration || audio.duration || 0;
+        if (d > 0) audio.currentTime = ratio * d;
+        renderProgress();
+      }
+
+      if (window.PointerEvent) {
+        seek.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          startDrag(e);
+        });
+        seek.addEventListener('pointermove', moveDrag);
+        seek.addEventListener('pointerup', endDrag);
+        seek.addEventListener('pointercancel', endDrag);
+      } else {
+        seek.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          startDrag(e);
+        });
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('mouseup', endDrag);
+        seek.addEventListener('touchstart', startDrag, { passive: true });
+        seek.addEventListener('touchmove', moveDrag, { passive: true });
+        seek.addEventListener('touchend', endDrag);
+      }
+
+      // 单击轨道立即跳转（拖动已在 pointerdown 时预览）
+      seek.addEventListener('click', function (e) {
+        const ratio = seekRatioFromEvent(e);
+        const d = duration || audio.duration || 0;
+        if (d > 0) audio.currentTime = ratio * d;
+      });
+
+      // ---- 键盘无障碍 ----
+      seek.addEventListener('keydown', function (e) {
+        const d = duration || audio.duration || 0;
+        if (d <= 0) return;
+        if (e.key === 'ArrowRight') { audio.currentTime = Math.min(d, audio.currentTime + 5); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft') { audio.currentTime = Math.max(0, audio.currentTime - 5); e.preventDefault(); }
+        else if (e.key === 'Home') { audio.currentTime = 0; e.preventDefault(); }
+        else if (e.key === 'End') { audio.currentTime = d; e.preventDefault(); }
+        else if (e.key === ' ' || e.key === 'Enter') { toggle(); e.preventDefault(); }
+      });
+
+      // 空格键在进度条上不滚动页面
+      seek.addEventListener('keyup', function (e) {
+        if (e.key === ' ') e.preventDefault();
+      });
+
+      // ---- 音频事件 ----
+      audio.addEventListener('loadedmetadata', renderDuration);
+      audio.addEventListener('durationchange', renderDuration);
+      audio.addEventListener('timeupdate', renderProgress);
+      audio.addEventListener('play', renderIcon);
+      audio.addEventListener('pause', renderIcon);
+      audio.addEventListener('ended', function () {
+        // 播放结束：图标回到 Play，进度条回到起点
+        renderIcon();
+        renderProgress();
+        if (audio.currentTime > 0 && (!duration || Math.abs(audio.currentTime - duration) < 0.25)) {
+          audio.currentTime = 0;
+          currentEl.textContent = fmt(0);
+          seek.style.setProperty('--progress', '0%');
+        }
+      });
+      audio.addEventListener('error', function () {
+        durationEl.textContent = '--:--';
+        btn.title = 'Audio failed to load';
+      });
+
+      // ---- 进入页面时尝试自动播放一次 ----
+      // 浏览器自动播放策略：若此前有过交互（例如从 index.html 点进来）通常可直接播放；
+      // 若被拦截，则等待用户的第一次点击/按键后再自动开始。
+      let autoplayTried = false;
+
+      function tryAutoplay() {
+        if (autoplayTried) return;
+        autoplayTried = true;
+        audio.muted = false;
+        const p = audio.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {
+            // 被策略拦截：退化为“首次交互即播放”
+            autoplayTried = false;
+            const kick = function () {
+              document.removeEventListener('pointerdown', kick);
+              document.removeEventListener('keydown', kick);
+              tryAutoplay();
+            };
+            document.addEventListener('pointerdown', kick);
+            document.addEventListener('keydown', kick);
+          });
+        }
+      }
+
+      tryAutoplay();
+
+
+      // ================= 阴阳玉弹幕：点击辐射射击 =================
+      // 修复要点：
+      //   A) 平移与自转拆到两个元素（.orb 平移 / .orb-img 旋转），
+      //      彻底消除“旋转把平移带成弧线”的矩阵复合问题
+      //   B) 速度单位 px/秒，位移 = v*dt，与帧率无关 => 恒速
+      //   C) 子步进，单步位移 <= 1px => 绝不穿墙，碰边即刻反弹
+      //   D) 安全边距 = 半径 + 光晕外扩 => 任何部分都不出屏
+      (function orbBarrage() {
+        const layer = document.getElementById('orbLayer');
+        if (!layer) return;
+
+        const ORB_SRC   = 'assets/orbs/yin-yang-orb-600.png';
+        const PER_BURST = 6;        // 等夹角 60°
+        const SPEED     = 420;      // px/秒（6 个模长完全相同）
+        const LIFETIME  = 3000;     // 毫秒
+        const SIZE      = 54;       // 显示直径 px
+        const INSET     = 10;       // 光晕外扩量
+        const MAX_STEP  = 1;        // 子步最大位移 px
+
+        const RAD    = SIZE / 2;
+        const MARGIN = RAD + INSET;
+
+        const reduceMotion = window.matchMedia &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const orbs = [];
+        let rafId = 0;
+        let last  = 0;
+
+        function spawnBurst(cx, cy) {
+          const W = window.innerWidth, H = window.innerHeight;
+          const loX = Math.min(MARGIN, W/2), hiX = Math.max(loX, W - MARGIN);
+          const loY = Math.min(MARGIN, H/2), hiY = Math.max(loY, H - MARGIN);
+          const ox = Math.min(Math.max(cx, loX), hiX);
+          const oy = Math.min(Math.max(cy, loY), hiY);
+
+          const phase = Math.random() * Math.PI * 2;
+
+          for (let i = 0; i < PER_BURST; i++) {
+            const angle = phase + (Math.PI * 2 / PER_BURST) * i;
+
+            // 外层：只负责平移
+            const wrap = document.createElement('div');
+            wrap.className = 'orb';
+            wrap.style.setProperty('--orb-size', SIZE + 'px');
+
+            // 内层：只负责自转
+            const img = document.createElement('img');
+            img.className = 'orb-img';
+            img.src = ORB_SRC;
+            img.alt = '';
+            img.draggable = false;
+            img.style.setProperty('--orb-spin', (5 + Math.random() * 4).toFixed(1) + 's');
+            wrap.appendChild(img);
+
+            layer.appendChild(wrap);
+
+            orbs.push({
+              el: wrap,
+              x: ox, y: oy,
+              vx: Math.cos(angle) * SPEED,
+              vy: Math.sin(angle) * SPEED,
+              born: performance.now(),
+            });
+          }
+          if (!rafId) { last = performance.now(); rafId = requestAnimationFrame(step); }
+        }
+
+        function step(now) {
+          let dt = (now - last) / 1000;
+          last = now;
+          if (!isFinite(dt) || dt < 0) dt = 0;
+          if (dt > 0.05) dt = 0.05;
+
+          const W = window.innerWidth, H = window.innerHeight;
+          const maxX = Math.max(MARGIN, W - MARGIN);
+          const maxY = Math.max(MARGIN, H - MARGIN);
+
+          for (let i = orbs.length - 1; i >= 0; i--) {
+            const o = orbs[i];
+            const age = now - o.born;
+
+            if (age >= LIFETIME) { o.el.remove(); orbs.splice(i, 1); continue; }
+
+            // ---- 按时间推进，子步进防穿墙 ----
+            const dist  = Math.hypot(o.vx, o.vy) * dt;
+            const steps = Math.max(1, Math.ceil(dist / MAX_STEP));
+            const sub   = dt / steps;
+
+            for (let s = 0; s < steps; s++) {
+              o.x += o.vx * sub;
+              o.y += o.vy * sub;
+
+              // 精确反射：镜像回退越界量后翻转分量
+              if (o.x < MARGIN)      { o.x = MARGIN + (MARGIN - o.x); o.vx =  Math.abs(o.vx); }
+              else if (o.x > maxX)   { o.x = maxX - (o.x - maxX);     o.vx = -Math.abs(o.vx); }
+              if (o.y < MARGIN)      { o.y = MARGIN + (MARGIN - o.y); o.vy =  Math.abs(o.vy); }
+              else if (o.y > maxY)   { o.y = maxY - (o.y - maxY);     o.vy = -Math.abs(o.vy); }
+
+              if (o.x < MARGIN) o.x = MARGIN; else if (o.x > maxX) o.x = maxX;
+              if (o.y < MARGIN) o.y = MARGIN; else if (o.y > maxY) o.y = maxY;
+            }
+
+            // 只平移，不含任何旋转/缩放
+            o.el.style.transform =
+              'translate3d(' + (o.x - RAD).toFixed(2) + 'px,' + (o.y - RAD).toFixed(2) + 'px,0)';
+
+            // 淡出只用透明度，不动几何，避免视觉漂移
+            o.el.style.opacity = Math.min(1, (LIFETIME - age) / 600).toFixed(3);
+          }
+
+          if (orbs.length) rafId = requestAnimationFrame(step);
+          else rafId = 0;
+        }
+
+        document.addEventListener('pointerdown', function (e) {
+          if (e.target.closest('a, button, .audio-player, .ap-seek, details, summary, input, select')) return;
+          if (e.button !== undefined && e.button !== 0) return;
+
+          if (reduceMotion) {
+            const wrap = document.createElement('div');
+            wrap.className = 'orb';
+            wrap.style.setProperty('--orb-size', SIZE + 'px');
+            const img = document.createElement('img');
+            img.className = 'orb-img'; img.src = ORB_SRC; img.alt = '';
+            img.style.animation = 'none';
+            wrap.appendChild(img);
+            wrap.style.transform = 'translate3d(' + (e.clientX - RAD) + 'px,' + (e.clientY - RAD) + 'px,0)';
+            layer.appendChild(wrap);
+            setTimeout(function () { wrap.remove(); }, 480);
+            return;
+          }
+          spawnBurst(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) { if (rafId) { cancelAnimationFrame(rafId); rafId = 0; } }
+          else if (orbs.length && !rafId) { last = performance.now(); rafId = requestAnimationFrame(step); }
+        });
+
+        window.addEventListener('resize', function () {
+          const W = window.innerWidth, H = window.innerHeight;
+          const maxX = Math.max(MARGIN, W - MARGIN), maxY = Math.max(MARGIN, H - MARGIN);
+          for (const o of orbs) {
+            o.x = Math.min(Math.max(o.x, MARGIN), maxX);
+            o.y = Math.min(Math.max(o.y, MARGIN), maxY);
+          }
+        });
+      })();
+
+      // ---- 初始化
+      renderDuration();
+      renderIcon();
+    })();
+  </script>
+</body>
+</html>
