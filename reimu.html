@@ -786,8 +786,32 @@
         padding: 24px 14px 36px;
       }
 
+      /* 窄屏（方案2）：隐藏四个锚点快捷链接，只保留“进入幻想乡 / 返回”按钮并居中放大 */
       .top-nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .nav-name {
         display: none;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+        gap: 0;
+      }
+
+      .nav-links > a:not(.enter-link) {
+        display: none;
+      }
+
+      .enter-link {
+        padding: 9px 22px;
+        font-size: 15px;
+        box-shadow: 0 4px 14px rgba(192, 32, 58, 0.16);
       }
 
       .card {
@@ -952,7 +976,7 @@
     <!-- ---------------- Hero / 个人简介 ---------------- -->
     <section class="card hero">
       <div>
-        <h1>Reimu Hakurei(霊夢 博麗])</h1>
+        <h1>Reimu Hakurei (霊夢 博麗)</h1>
 
         <p class="identity">
           [YOUR TITLE / PROGRAM, e.g. Undergraduate Student, Major]<br>
